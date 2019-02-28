@@ -7,7 +7,7 @@
 #include "AP_BattMonitor_Params.h"
 
 // maximum number of battery monitors
-#define AP_BATT_MONITOR_MAX_INSTANCES       2
+#define AP_BATT_MONITOR_MAX_INSTANCES       9
 
 // first monitor is always the primary monitor
 #define AP_BATT_PRIMARY_INSTANCE            0
@@ -35,6 +35,7 @@ class AP_BattMonitor
     friend class AP_BattMonitor_SMBus_Solo;
     friend class AP_BattMonitor_SMBus_Maxell;
     friend class AP_BattMonitor_UAVCAN;
+    friend class AP_BattMonitor_Sum;
 
 public:
 
@@ -53,8 +54,8 @@ public:
     AP_BattMonitor(const AP_BattMonitor &other) = delete;
     AP_BattMonitor &operator=(const AP_BattMonitor&) = delete;
 
-    static AP_BattMonitor &battery() {
-        return *_singleton;
+    static AP_BattMonitor *get_singleton() {
+        return _singleton;
     }
 
     struct cells {
@@ -77,6 +78,8 @@ public:
         float       resistance;                // resistance, in Ohms, calculated by comparing resting voltage vs in flight voltage
         BatteryFailsafe failsafe;              // stage failsafe the battery is in
         bool        healthy;                   // battery monitor is communicating correctly
+        bool        is_powering_off;           // true when power button commands power off
+        bool        powerOffNotified;          // only send powering off notification once
     };
 
     // Return the number of battery monitor instances
@@ -163,6 +166,12 @@ public:
     // get battery resistance estimate in ohms
     float get_resistance() const { return get_resistance(AP_BATT_PRIMARY_INSTANCE); }
     float get_resistance(uint8_t instance) const { return state[instance].resistance; }
+
+    // returns false if we fail arming checks, in which case the buffer will be populated with a failure message
+    bool arming_checks(size_t buflen, char *buffer) const;
+
+    // sends powering off mavlink broadcasts and sets notify flag
+    void checkPoweringOff(void);
 
     static const struct AP_Param::GroupInfo var_info[];
 

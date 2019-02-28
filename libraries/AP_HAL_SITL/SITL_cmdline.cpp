@@ -18,6 +18,7 @@
 #include <SITL/SIM_QuadPlane.h>
 #include <SITL/SIM_Rover.h>
 #include <SITL/SIM_BalanceBot.h>
+#include <SITL/SIM_Sailboat.h>
 #include <SITL/SIM_CRRCSim.h>
 #include <SITL/SIM_Gazebo.h>
 #include <SITL/SIM_last_letter.h>
@@ -28,6 +29,7 @@
 #include <SITL/SIM_Calibration.h>
 #include <SITL/SIM_XPlane.h>
 #include <SITL/SIM_Submarine.h>
+#include <SITL/SIM_Morse.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -88,6 +90,9 @@ static const struct {
     { "quad",               MultiCopter::create },
     { "copter",             MultiCopter::create },
     { "x",                  MultiCopter::create },
+    { "bfx",                MultiCopter::create },
+    { "djix",               MultiCopter::create },
+    { "cwx",                MultiCopter::create },
     { "hexa",               MultiCopter::create },
     { "octa",               MultiCopter::create },
     { "dodeca-hexa",        MultiCopter::create },
@@ -100,6 +105,7 @@ static const struct {
     { "coaxcopter",         SingleCopter::create },
     { "rover",              SimRover::create },
     { "balancebot",         BalanceBot::create },
+    { "sailboat",           Sailboat::create },
     { "crrcsim",            CRRCSim::create },
     { "jsbsim",             JSBSim::create },
     { "flightaxis",         FlightAxis::create },
@@ -110,6 +116,7 @@ static const struct {
     { "plane",              Plane::create },
     { "calibration",        Calibration::create },
     { "vectored",           Submarine::create },
+    { "morse",              Morse::create },
 };
 
 void SITL_State::_set_signal_handlers(void) const

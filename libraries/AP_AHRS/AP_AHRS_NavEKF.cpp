@@ -27,6 +27,9 @@
 
 #if AP_AHRS_NAVEKF_AVAILABLE
 
+#define ATTITUDE_CHECK_THRESH_ROLL_PITCH_RAD radians(10)
+#define ATTITUDE_CHECK_THRESH_YAW_RAD radians(20)
+
 extern const AP_HAL::HAL& hal;
 
 // constructor
@@ -403,24 +406,18 @@ void AP_AHRS_NavEKF::reset_attitude(const float &_roll, const float &_pitch, con
 // dead-reckoning support
 bool AP_AHRS_NavEKF::get_position(struct Location &loc) const
 {
-    Vector3f ned_pos;
-    Location origin;
     switch (active_EKF_type()) {
     case EKF_TYPE_NONE:
         return AP_AHRS_DCM::get_position(loc);
 
     case EKF_TYPE2:
-        if (EKF2.getLLH(loc) && EKF2.getPosD(-1,ned_pos.z) && EKF2.getOriginLLH(-1,origin)) {
-            // fixup altitude using relative position from EKF origin
-            loc.alt = origin.alt - ned_pos.z*100;
+        if (EKF2.getLLH(loc)) {
             return true;
         }
         break;
 
     case EKF_TYPE3:
-        if (EKF3.getLLH(loc) && EKF3.getPosD(-1,ned_pos.z) && EKF3.getOriginLLH(-1,origin)) {
-            // fixup altitude using relative position from EKF origin
-            loc.alt = origin.alt - ned_pos.z*100;
+        if (EKF3.getLLH(loc)) {
             return true;
         }
         break;
@@ -429,7 +426,7 @@ bool AP_AHRS_NavEKF::get_position(struct Location &loc) const
     case EKF_TYPE_SITL: {
         if (_sitl) {
             const struct SITL::sitl_fdm &fdm = _sitl->state;
-            memset(&loc, 0, sizeof(loc));
+            loc = {};
             loc.lat = fdm.latitude * 1e7;
             loc.lng = fdm.longitude * 1e7;
             loc.alt = fdm.altitude*100;
@@ -1314,6 +1311,56 @@ const char *AP_AHRS_NavEKF::prearm_failure_reason(void) const
 
     }
     return nullptr;
+}
+
+// check all cores providing consistent attitudes for prearm checks
+bool AP_AHRS_NavEKF::attitudes_consistent() const
+{
+    // get primary attitude source's attitude as quaternion
+    Quaternion primary_quat;
+    primary_quat.from_euler(roll, pitch, yaw);
+
+    // check primary vs ekf2
+    for (uint8_t i = 0; i < EKF2.activeCores(); i++) {
+        Quaternion ekf2_quat;
+        Vector3f angle_diff;
+        EKF2.getQuaternion(i, ekf2_quat);
+        primary_quat.angular_difference(ekf2_quat).to_axis_angle(angle_diff);
+        if (safe_sqrt(sq(angle_diff.x)+sq(angle_diff.y)) > ATTITUDE_CHECK_THRESH_ROLL_PITCH_RAD) {
+            return false;
+        }
+        if (fabsf(angle_diff.z) > ATTITUDE_CHECK_THRESH_YAW_RAD) {
+            return false;
+        }
+    }
+
+    // check primary vs ekf3
+    for (uint8_t i = 0; i < EKF3.activeCores(); i++) {
+        Quaternion ekf3_quat;
+        Vector3f angle_diff;
+        EKF3.getQuaternion(i, ekf3_quat);
+        primary_quat.angular_difference(ekf3_quat).to_axis_angle(angle_diff);
+        if (safe_sqrt(sq(angle_diff.x)+sq(angle_diff.y)) > ATTITUDE_CHECK_THRESH_ROLL_PITCH_RAD) {
+            return false;
+        }
+        if (fabsf(angle_diff.z) > ATTITUDE_CHECK_THRESH_YAW_RAD) {
+            return false;
+        }
+    }
+
+    // check primary vs dcm
+    Quaternion dcm_quat;
+    Vector3f angle_diff;
+    dcm_quat.from_axis_angle(_dcm_attitude);
+    primary_quat.angular_difference(dcm_quat).to_axis_angle(angle_diff);
+    if (safe_sqrt(sq(angle_diff.x)+sq(angle_diff.y)) > ATTITUDE_CHECK_THRESH_ROLL_PITCH_RAD) {
+        return false;
+    }
+    if (fabsf(angle_diff.z) > ATTITUDE_CHECK_THRESH_YAW_RAD) {
+        return false;
+    }
+
+    return true;
 }
 
 // return the amount of yaw angle change due to the last yaw angle reset in radians

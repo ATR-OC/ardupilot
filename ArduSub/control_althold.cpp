@@ -14,8 +14,8 @@ bool Sub::althold_init()
 
     // initialize vertical speeds and leash lengths
     // sets the maximum speed up and down returned by position controller
-    pos_control.set_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
-    pos_control.set_accel_z(g.pilot_accel_z);
+    pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+    pos_control.set_max_accel_z(g.pilot_accel_z);
 
     // initialise position and desired velocity
     pos_control.set_alt_target(inertial_nav.get_altitude());
@@ -33,11 +33,11 @@ void Sub::althold_run()
     uint32_t tnow = AP_HAL::millis();
 
     // initialize vertical speeds and acceleration
-    pos_control.set_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
-    pos_control.set_accel_z(g.pilot_accel_z);
+    pos_control.set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+    pos_control.set_max_accel_z(g.pilot_accel_z);
 
     if (!motors.armed()) {
-        motors.set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        motors.set_desired_spool_state(AP_Motors::DESIRED_GROUND_IDLE);
         // Sub vehicles do not stabilize roll/pitch/yaw when not auto-armed (i.e. on the ground, pilot has never raised throttle)
         attitude_control.set_throttle_out_unstabilized(0,true,g.throttle_filt);
         pos_control.relax_alt_hold_controllers(motors.get_throttle_hover());
@@ -95,7 +95,7 @@ void Sub::althold_run()
         }
     }
 
-    if (fabsf(channel_throttle->norm_input()-0.5) > 0.05) { // Throttle input above 5%
+    if (fabsf(channel_throttle->norm_input()-0.5f) > 0.05f) { // Throttle input above 5%
         // output pilot's throttle
         attitude_control.set_throttle_out(channel_throttle->norm_input(), false, g.throttle_filt);
         // reset z targets to current values

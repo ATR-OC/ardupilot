@@ -2,13 +2,24 @@
 
 extern const AP_HAL::HAL& hal;
 
+void GCS::get_sensor_status_flags(uint32_t &present,
+                                  uint32_t &enabled,
+                                  uint32_t &health)
+{
+    update_sensor_status_flags();
+
+    present = control_sensors_present;
+    enabled = control_sensors_enabled;
+    health = control_sensors_health;
+}
+
 /*
   send a text message to all GCS
  */
 void GCS::send_textv(MAV_SEVERITY severity, const char *fmt, va_list arg_list)
 {
-    char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN+1] {};
-    hal.util->vsnprintf((char *)text, sizeof(text)-1, fmt, arg_list);
+    char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN+1];
+    hal.util->vsnprintf(text, sizeof(text), fmt, arg_list);
     send_statustext(severity, GCS_MAVLINK::active_channel_mask() | GCS_MAVLINK::streaming_channel_mask(), text);
 }
 
@@ -36,16 +47,6 @@ void GCS::send_text(MAV_SEVERITY severity, const char *fmt, ...)
 void GCS::send_named_float(const char *name, float value) const
 {
     FOR_EACH_ACTIVE_CHANNEL(send_named_float(name, value));
-}
-
-void GCS::send_home() const
-{
-    FOR_EACH_ACTIVE_CHANNEL(send_home());
-}
-
-void GCS::send_ekf_origin() const
-{
-    FOR_EACH_ACTIVE_CHANNEL(send_ekf_origin());
 }
 
 /*

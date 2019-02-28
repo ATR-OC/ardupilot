@@ -292,10 +292,6 @@
  # define USE_CURRENT_ALT FALSE
 #endif
 
-#ifndef PX4IO_OVERRIDE_PWM
- # define PX4IO_OVERRIDE_PWM 1750
-#endif
-
 //////////////////////////////////////////////////////////////////////////////
 // Developer Items
 //
@@ -352,12 +348,6 @@
  #endif
 #endif
 
-#if CONFIG_HAL_BOARD == HAL_BOARD_PX4 && !defined(CONFIG_ARCH_BOARD_PX4FMU_V4)
-# define HAVE_PX4_MIXER 1
-#else
-# define HAVE_PX4_MIXER 0
-#endif
-
 #ifndef STATS_ENABLED
  # define STATS_ENABLED ENABLED
 #endif
@@ -380,4 +370,8 @@
 #else
  #define SOARING_ENABLED ENABLED
 #endif
+#endif
+
+#ifndef LANDING_GEAR_ENABLED
+ #define LANDING_GEAR_ENABLED !HAL_MINIMIZE_FEATURES
 #endif

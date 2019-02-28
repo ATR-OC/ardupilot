@@ -89,6 +89,7 @@ void AP_BoardConfig::board_setup_drivers(void)
     case PX4_BOARD_PIXHAWK:
     case PX4_BOARD_PIXHAWK2:
     case PX4_BOARD_FMUV5:
+    case PX4_BOARD_FMUV6:
     case PX4_BOARD_SP01:
     case PX4_BOARD_PIXRACER:
     case PX4_BOARD_PHMINI:
@@ -241,7 +242,7 @@ void AP_BoardConfig::board_autodetect(void)
     // only one choice
     state.board_type.set_and_notify(PX4_BOARD_MINDPXV2);
     hal.console->printf("Detected MindPX-V2\n");
-#elif defined(CONFIG_ARCH_BOARD_PX4FMU_V4PRO)
+#elif defined(CONFIG_ARCH_BOARD_PX4FMU_V4PRO) || defined(HAL_CHIBIOS_ARCH_FMUV4PRO)
     // only one choice
     state.board_type.set_and_notify(PX4_BOARD_PIXHAWK_PRO);
     hal.console->printf("Detected Pixhawk Pro\n");	
@@ -251,25 +252,28 @@ void AP_BoardConfig::board_autodetect(void)
 #elif defined(HAL_CHIBIOS_ARCH_FMUV5)
     state.board_type.set_and_notify(PX4_BOARD_FMUV5);
     hal.console->printf("Detected FMUv5\n");
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51)
+#elif defined(HAL_CHIBIOS_ARCH_FMUV6)
+    state.board_type.set_and_notify(PX4_BOARD_FMUV5);
+    hal.console->printf("Detected FMUv6\n");
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V51) || defined(HAL_CHIBIOS_ARCH_BRAINV51)
     state.board_type.set_and_notify(VRX_BOARD_BRAIN51);
     hal.console->printf("Detected VR Brain 5.1\n");
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V52)
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V52) || defined(HAL_CHIBIOS_ARCH_BRAINV52)
     state.board_type.set_and_notify(VRX_BOARD_BRAIN52);
     hal.console->printf("Detected VR Brain 5.2\n");
 #elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V52E)
     state.board_type.set_and_notify(VRX_BOARD_BRAIN52E);
     hal.console->printf("Detected VR Brain 5.2E\n");
-#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51)
+#elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V51) || defined(HAL_CHIBIOS_ARCH_UBRAINV51)
     state.board_type.set_and_notify(VRX_BOARD_UBRAIN51);
     hal.console->printf("Detected VR Micro Brain 5.1\n");
 #elif defined(CONFIG_ARCH_BOARD_VRUBRAIN_V52)
     state.board_type.set_and_notify(VRX_BOARD_UBRAIN52);
     hal.console->printf("Detected VR Micro Brain 5.2\n");
-#elif defined(CONFIG_ARCH_BOARD_VRCORE_V10)
+#elif defined(CONFIG_ARCH_BOARD_VRCORE_V10) || defined(HAL_CHIBIOS_ARCH_COREV10)
     state.board_type.set_and_notify(VRX_BOARD_CORE10);
     hal.console->printf("Detected VR Core 1.0\n");
-#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V54)
+#elif defined(CONFIG_ARCH_BOARD_VRBRAIN_V54) || defined(HAL_CHIBIOS_ARCH_BRAINV54)
     state.board_type.set_and_notify(VRX_BOARD_BRAIN54);
     hal.console->printf("Detected VR Brain 5.4\n");
 #endif
@@ -329,11 +333,7 @@ void AP_BoardConfig::board_setup_sbus(void)
  */
 void AP_BoardConfig::board_setup()
 {
-#if CONFIG_HAL_BOARD == HAL_BOARD_PX4 || CONFIG_HAL_BOARD == HAL_BOARD_VRBRAIN
-    px4_setup_peripherals();
-    px4_setup_pwm();
-    px4_setup_safety_mask();
-#elif CONFIG_HAL_BOARD == HAL_BOARD_CHIBIOS
+#if CONFIG_HAL_BOARD == HAL_BOARD_CHIBIOS
     // init needs to be done after boardconfig is read so parameters are set
     hal.gpio->init();
     hal.rcin->init();
