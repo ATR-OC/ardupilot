@@ -144,6 +144,14 @@ const AP_Param::GroupInfo SITL::var_info2[] = {
     // vibration frequencies on each axis
     AP_GROUPINFO("BAUDLIMIT_EN",   28, SITL,  telem_baudlimit_enable, 0),
 
+    // @Group: PLD_
+    // @Path: ./SIM_Precland.cpp
+    AP_SUBGROUPINFO(precland_sim, "PLD_", 29, SITL, SIM_Precland),
+
+    AP_GROUPINFO("SHOVE_X",     30, SITL,  shove.x, 0),
+    AP_GROUPINFO("SHOVE_Y",     31, SITL,  shove.y, 0),
+    AP_GROUPINFO("SHOVE_Z",     32, SITL,  shove.z, 0),
+    AP_GROUPINFO("SHOVE_TIME",  33, SITL,  shove.t, 0),
     AP_GROUPEND
 };
     

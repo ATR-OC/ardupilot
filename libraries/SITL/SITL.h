@@ -8,6 +8,7 @@
 #include "SIM_Gripper_Servo.h"
 #include "SIM_Gripper_EPM.h"
 #include "SIM_Parachute.h"
+#include "SIM_Precland.h"
 
 class AP_Logger;
 
@@ -228,7 +229,16 @@ public:
 
     // vibration frequencies in Hz on each axis
     AP_Vector3f vibe_freq;
-    
+
+    struct {
+        AP_Float x;
+        AP_Float y;
+        AP_Float z;
+        AP_Int32 t;
+
+        uint32_t start_ms;
+    } shove;
+
     uint16_t irlock_port;
 
     void simstate_send(mavlink_channel_t chan);
@@ -249,6 +259,7 @@ public:
     Gripper_EPM gripper_epm_sim;
 
     Parachute parachute_sim;
+    SIM_Precland precland_sim;
 };
 
 } // namespace SITL

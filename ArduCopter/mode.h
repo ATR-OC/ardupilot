@@ -87,6 +87,7 @@ protected:
     virtual bool has_manual_throttle() const = 0;
     virtual bool allows_arming(bool from_gcs) const = 0;
 
+    virtual bool is_landing() const { return false; }
     virtual bool landing_gear_should_be_deployed() const { return false; }
 
     virtual const char *name() const = 0;
@@ -176,6 +177,7 @@ protected:
     void auto_takeoff_attitude_run(float target_yaw_rate);
     // altitude below which we do no navigation in auto takeoff
     static float auto_takeoff_no_nav_alt_cm;
+    virtual bool is_taking_off() const;
 
     // pass-through functions to reduce code churn on conversion;
     // these are candidates for moving into the Mode base
@@ -299,7 +301,10 @@ public:
     void spline_start(const Location& destination, bool stopped_at_start, AC_WPNav::spline_segment_end_type seg_end_type, const Location& next_destination);
     void nav_guided_start();
 
+    bool is_landing() const override;
     bool landing_gear_should_be_deployed() const override;
+
+    bool is_taking_off() const override;
 
     // return true if this flight mode supports user takeoff
     //  must_nagivate is true if mode must also control horizontal position
@@ -450,7 +455,7 @@ protected:
     bool start(void) override;
     bool position_ok() override;
     float get_pilot_desired_climb_rate_cms(void) const override;
-    void get_pilot_desired_rp_yrate_cd(int32_t &roll_cd, int32_t &pitch_cd, int32_t &yaw_rate_cds) override;
+    void get_pilot_desired_rp_yrate_cd(float &roll_cd, float &pitch_cd, float &yaw_rate_cds) override;
     void init_z_limits() override;
     void Log_Write_Event(enum at_event id) override;
     void log_pids() override;
@@ -719,6 +724,8 @@ public:
     void limit_set(uint32_t timeout_ms, float alt_min_cm, float alt_max_cm, float horiz_max_cm);
     bool limit_check();
 
+    bool is_taking_off() const override;
+
     bool do_user_takeoff_start(float final_alt_above_home) override;
 
     GuidedMode mode() const { return guided_mode; }
@@ -790,6 +797,7 @@ public:
     bool has_manual_throttle() const override { return false; }
     bool allows_arming(bool from_gcs) const override { return false; };
     bool is_autopilot() const override { return true; }
+    bool is_landing() const override { return true; };
     bool landing_gear_should_be_deployed() const override { return true; };
 
     void do_not_use_GPS();
@@ -902,6 +910,7 @@ public:
     // this should probably not be exposed
     bool state_complete() { return _state_complete; }
 
+    bool is_landing() const override;
     bool landing_gear_should_be_deployed() const override;
 
     void restart_without_terrain();

@@ -69,6 +69,10 @@
 #include "GCS_Mavlink.h"
 #include "GCS_Tracker.h"
 
+#ifdef ENABLE_SCRIPTING
+#include <AP_Scripting/AP_Scripting.h>
+#endif
+
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 #include <SITL/SITL.h>
 #endif
@@ -155,6 +159,10 @@ private:
 
     enum ControlMode control_mode  = INITIALISING;
 
+#ifdef ENABLE_SCRIPTING
+    AP_Scripting scripting;
+#endif
+
     // Vehicle state
     struct {
         bool location_valid;    // true if we have a valid location for the vehicle
@@ -188,6 +196,7 @@ private:
 
     uint8_t one_second_counter = 0;
     bool target_set = false;
+    bool stationary = true; // are we using the start lat and log?
 
     static const AP_Scheduler::Task scheduler_tasks[];
     static const AP_Param::Info var_info[];

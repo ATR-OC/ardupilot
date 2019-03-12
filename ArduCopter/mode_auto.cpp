@@ -22,7 +22,7 @@
 // auto_init - initialise auto controller
 bool Copter::ModeAuto::init(bool ignore_checks)
 {
-    if ((copter.position_ok() && mission.num_commands() > 1) || ignore_checks) {
+    if (mission.num_commands() > 1 || ignore_checks) {
         _mode = Auto_Loiter;
 
         // reject switching to auto mode if landed with motors armed but first command is not a takeoff (reduce chance of flips)
@@ -348,6 +348,24 @@ void Copter::ModeAuto::nav_guided_start()
     copter.mode_guided.limit_init_time_and_pos();
 }
 #endif //NAV_GUIDED
+
+bool Copter::ModeAuto::is_landing() const
+{
+    switch(_mode) {
+    case Auto_Land:
+        return true;
+    case Auto_RTL:
+        return copter.mode_rtl.is_landing();
+    default:
+        return false;
+    }
+    return false;
+}
+
+bool Copter::ModeAuto::is_taking_off() const
+{
+    return _mode == Auto_TakeOff;
+}
 
 bool Copter::ModeAuto::landing_gear_should_be_deployed() const
 {

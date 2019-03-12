@@ -40,13 +40,9 @@ struct Guided_Limit {
 // guided_init - initialise guided controller
 bool Copter::ModeGuided::init(bool ignore_checks)
 {
-    if (copter.position_ok() || ignore_checks) {
-        // start in position control mode
-        pos_control_start();
-        return true;
-    }else{
-        return false;
-    }
+    // start in position control mode
+    pos_control_start();
+    return true;
 }
 
 
@@ -141,6 +137,11 @@ void Copter::ModeGuided::posvel_control_start()
 
     // pilot always controls yaw
     auto_yaw.set_mode(AUTO_YAW_HOLD);
+}
+
+bool Copter::ModeGuided::is_taking_off() const
+{
+    return guided_mode == Guided_TakeOff;
 }
 
 // initialise guided mode's angle controller

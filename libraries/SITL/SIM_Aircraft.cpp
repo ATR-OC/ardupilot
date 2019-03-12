@@ -159,6 +159,11 @@ float Aircraft::ground_height_difference() const
     return 0.0f;
 }
 
+void Aircraft::set_precland(SIM_Precland *_precland) {
+    precland = _precland;
+    precland->set_default_location(home.lat * 1.0e-7f, home.lng * 1.0e-7f, static_cast<int16_t>(get_home_yaw()));
+}
+
 /*
    return current height above ground level (metres)
 */
@@ -766,10 +771,34 @@ void Aircraft::update_external_payload(const struct sitl_input &input)
         external_payload_mass += gripper_epm->payload_mass();
     }
 
-
     // update parachute
     if (parachute && parachute->is_enabled()) {
         parachute->update(input);
         // TODO: add drag to vehicle, presumably proportional to velocity
+    }
+
+    if (precland && precland->is_enabled()) {
+        precland->update(get_location(), get_position());
+    }
+}
+
+void Aircraft::add_shove_forces(Vector3f &rot_accel, Vector3f &body_accel)
+{
+    const uint32_t now = AP_HAL::millis();
+
+    if (sitl->shove.t == 0) {
+        return;
+    }
+    if (sitl->shove.start_ms == 0) {
+        sitl->shove.start_ms = now;
+    }
+    if (now - sitl->shove.start_ms < uint32_t(sitl->shove.t)) {
+        // FIXME: can we get a vector operation here instead?
+        body_accel.x += sitl->shove.x;
+        body_accel.y += sitl->shove.y;
+        body_accel.z += sitl->shove.z;
+    } else {
+        sitl->shove.start_ms = 0;
+        sitl->shove.t = 0;
     }
 }

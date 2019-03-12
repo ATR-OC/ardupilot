@@ -12,15 +12,11 @@
 // rtl_init - initialise rtl controller
 bool Copter::ModeRTL::init(bool ignore_checks)
 {
-    if (copter.position_ok() || ignore_checks) {
-        // initialise waypoint and spline controller
-        wp_nav->wp_and_spline_init();
-        build_path(!copter.failsafe.terrain);
-        climb_start();
-        return true;
-    }else{
-        return false;
-    }
+    // initialise waypoint and spline controller
+    wp_nav->wp_and_spline_init();
+    build_path(!copter.failsafe.terrain);
+    climb_start();
+    return true;
 }
 
 // re-start RTL with terrain following disabled
@@ -339,6 +335,11 @@ void Copter::ModeRTL::land_start()
 
     // initialise yaw
     auto_yaw.set_mode(AUTO_YAW_HOLD);
+}
+
+bool Copter::ModeRTL::is_landing() const
+{
+    return _state == RTL_Land;
 }
 
 bool Copter::ModeRTL::landing_gear_should_be_deployed() const
